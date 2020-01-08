@@ -6,7 +6,7 @@ namespace obvious
 {
 
 SensorVelodyne3D::SensorVelodyne3D(unsigned int raysIncl, double inclMin, double inclRes, double azimRes, double maxRange, double minRange, double lowReflectivityRange):
-                     Sensor(3, maxRange, minRange, lowReflectivityRange)
+                                             Sensor(3, maxRange, minRange, lowReflectivityRange)
 {
   _azimRes = azimRes;
   _inclRes = inclRes;
@@ -15,7 +15,10 @@ SensorVelodyne3D::SensorVelodyne3D(unsigned int raysIncl, double inclMin, double
   double inclAngle = 0.0;
   const double resetInclMin = inclMin;  //to reset variable inclMin each time after exiting inner for-loop (=-15° here for VLP16)
 
-  raysAzim = static_cast<unsigned>(deg2rad(360)/azimRes);
+  std::cout << __PRETTY_FUNCTION__ << "_azimRes = " << _azimRes << std::endl;
+
+  raysAzim = round(static_cast<unsigned>(360/azimRes));
+  std::cout << __PRETTY_FUNCTION__ << "raysAzim = " << raysAzim << std::endl;
 
   //inherited from class sensor
   // Size of first dimension, i.e., # of samples of a 2D scan or width of image sensor
@@ -24,8 +27,16 @@ SensorVelodyne3D::SensorVelodyne3D(unsigned int raysIncl, double inclMin, double
   _height = raysIncl;
   // Number of measurement samples, i.e. _width x _height
   _size = raysAzim*raysIncl;
+  std::cout << __PRETTY_FUNCTION__ << "_size = " << _size << std::endl;
 
   _rays  = new obvious::Matrix(3, _size);
+  std::cout << __PRETTY_FUNCTION__ << "raysAzim = " << raysAzim << " raysIncl = "<< raysIncl << std::endl;
+
+
+  //evtl mit _height u _width ersetzen
+  obvious::System<int>::allocate(raysAzim, raysIncl, _indexMap);
+  // for backproject --> SPÄTER WIRD DIE VARIABLE HIER NICHT MEHR GEBRAUCHT; DA INDICES IN AUFRUFENDER METHODE (velodyne3d_ros_wrapper) DIMENSIONIERT WIRD
+  _indices = new int[4];
 
   //TEST
   double x = 0.2;
@@ -41,9 +52,31 @@ SensorVelodyne3D::SensorVelodyne3D(unsigned int raysIncl, double inclMin, double
   returnRayIndex(azimAngle, inclAngle, &azimIndex, &inclIndex);
 
   setIndexMap(raysAzim, raysIncl);
+  //test just three 3D points in matrix with method backProject
+  obvious::Matrix testMatrix(3, 4);
 
-  //test
-  backProject();
+  //p1
+  testMatrix(0,0) = 0.2;
+  testMatrix(1,0) = 0.01;
+  testMatrix(2,0) = -0.0077;
+  //p2
+  testMatrix(0,1) = 0.1;
+  testMatrix(1,1) = 0.01;
+  testMatrix(2,1) = 0;
+  //p3
+  testMatrix(0,2) = 0.15;
+  testMatrix(1,2) = 0.01;
+  testMatrix(2,2) = 0.0077;
+  //p4
+  testMatrix(0,3) = 0.175;
+  testMatrix(1,3) = 0.01;
+  testMatrix(2,3) = 0.0077;
+  obvious::Matrix* test = &testMatrix;
+
+  //////////////////////////////////////////////////////////////////////////////////////////
+  //die methode wird nachher ja in PUSH aufgerufen, hie rnur zum test
+  //backProject(test, _indices);
+
 
   unsigned int n = 0;   //counts all rays of inner loop and outer loop to store in matrix _rays
   for(unsigned int i = 0; i < raysAzim; i++)
@@ -93,6 +126,7 @@ SensorVelodyne3D::SensorVelodyne3D(unsigned int raysIncl, double inclMin, double
     inclMin   = resetInclMin;   //reset inclination angle to minimum
     azimAngle += azimRes;
   }
+
 }
 
 SensorVelodyne3D::~SensorVelodyne3D()
@@ -145,8 +179,6 @@ void SensorVelodyne3D::returnRayIndex(double azimAngle, double inclAngle, unsign
 void SensorVelodyne3D::setIndexMap(unsigned int raysAzim, unsigned int raysIncl)
 {
   unsigned int column = 0;
-  //evtl mit _height u _width ersetzen
-  obvious::System<int>::allocate(raysAzim, raysIncl, _indexMap);
   for(unsigned int row=0; row < raysAzim; row++)
   {
     for(column = 0; column < raysIncl; column++)
@@ -202,19 +234,21 @@ unsigned int SensorVelodyne3D::lookupIndex(int indexSensormodel)
 }
 
 //first test with selfmade matrix before ROS pointcloud matrix comes in later
-//void backProject(obvious::Matrix* M, int* indices, obvious::Matrix* T)
-void SensorVelodyne3D::backProject()
+void SensorVelodyne3D::backProject(obvious::Matrix* M, int* indices, obvious::Matrix* T)
 {
-  obvious::Matrix testMatrix(3, 1);
-    //add coordinates of sphere for testing
-    double z = -0.0077;
-    double y = 0.01;
-    double x = 0.2;
-    testMatrix(0,0) = x;
-    testMatrix(1,0) = y;
-    testMatrix(2,0) = z;
+  obvious::Matrix copyM = *M;
+  std::cout << __PRETTY_FUNCTION__ << " getRows = " << M->getRows() << std::endl;
+  std::cout << __PRETTY_FUNCTION__ << " getCols = " << M->getCols() << std::endl;
 
-    //loop through all points later, for now: just one 3D point in matrix
+  //LATER GETROWS WIE BEI MAY WEGEN TRANSPOSE??
+  for(unsigned int i = 0; i < M->getCols(); i++)    //todo WARUM HIER GETROWS??? muss das nicht getcolumns sein?
+  {
+    double x = copyM(0, i);
+    double y = copyM(1, i);
+    double z = copyM(2, i);
+    std::cout << __PRETTY_FUNCTION__ << " x = " << x << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " y = " << y << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " z = " << z << std::endl;
     double inclAngle = 0.0;
     double azimAngle = 0.0;
     returnAngles(x, y, z, &inclAngle, &azimAngle);
@@ -232,63 +266,21 @@ void SensorVelodyne3D::backProject()
     unsigned int columnMapped = lookupIndex(column);
     std::cout << __PRETTY_FUNCTION__ << " columnMapped = " << columnMapped << std::endl;
 
-    //push value into int* that is in indexMap[row][column]
+    //    push value into int* that is in indexMap[row][column]
     std::cout << __PRETTY_FUNCTION__ << "_indexMap = " << _indexMap[row][columnMapped] << std::endl;
 
     //probe: index ausrechnen
     unsigned int idxCheck = columnMapped + 16 * row;
     std::cout << __PRETTY_FUNCTION__ << " idxCheck = " << idxCheck << std::endl;
 
+    indices[i] = _indexMap[row][columnMapped];
+    std::cout << "end of loop, content of vector indices = " << indices[i] << std::endl;
+    std::cout << "laufvariable = " << i << std::endl;
+    //    _indices[i] = _indexMap[row][columnMapped];
+    //    std::cout << "end of loop, content of vector indices = " << _indices[i] << std::endl;
+  }
 
-    //transform M into sensor coordinate system
-  //  obvious::Matrix PoseInv = obvious::getTransformation();
-  //  PoseInv.invert();
-  //  if(T)
-  //    PoseInv *= *T;
-  //
-  //  //multiply PoseInv with M where poseInv is not transposed but M is transposed (true)
-  //  obvious::Matrix coords3D = obvious::Matrix::multiply(PoseInv, *M, false, true);
-  //  obvious::Matrix coords3D;
-  //
-  //  //loop through all 3d points in matrix and calculate inclination angle phi, azimuth angle theta and length vector (length from 3D pt to 0)
-  //  //WARUM DURCH ROWS? UND NICHT COLUMNS? WEIL TRANSPOSED WURDE? ne du idiot, i steht ja an der column stelle. hääää
-  //  for(unsigned int i=0; i<M->getRows(); i++)
-  //    {
-  //      double phi = atan2(coords3D(2,i), coords3D(0,i)) - M_PI;
-  //      if(phi>M_PI) phi -= M_PI;
-  //      if(phi<-M_PI) phi += M_PI;
-  //
-  //      double r = sqrt(coords3D(0,i) * coords3D(0,i) + coords3D(1,i) * coords3D(1,i) + coords3D(2,i) * coords3D(2,i));
-  //      double theta = acos(coords3D(1,i) / r);
-  //      if(coords3D(2,i)>0)
-  //        theta = -theta;
-  //
-  //      //nächste codeschritte aus may's code: rechnen für den swiipenden scanner, bei mir 360°
-  //    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

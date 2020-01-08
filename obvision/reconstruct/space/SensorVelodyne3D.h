@@ -66,15 +66,16 @@ public:
    * @param[out] indices vector of projection results (must be allocated outside)
    * @param[in] T temporary transformation matrix of coordinates
    */
-  //first test with selfmade matrix before ROS pointcloud matrix comes in later
-  //void backProject(obvious::Matrix* M, int* indices, obvious::Matrix* T)
-  void backProject();
+  void backProject(obvious::Matrix* M, int* indices, obvious::Matrix* T=NULL);
 
 private:
 
   double _azimRes;
   double _inclRes;
   int** _indexMap;
+  /////////////////////////////////////////// DAS HIER SPÄTER RAUS UND IN AUFRUFENDER METHODE RICHTIG DIMENSIONIEREN!!!! getrows oder so
+  int* _indices;
+  //////////////////////////////
 
 
 };

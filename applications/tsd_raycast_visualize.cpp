@@ -15,11 +15,13 @@
 #include "obvision/reconstruct/space/SensorProjective3D.h"
 #include "obvision/reconstruct/space/SensorPolar3D.h"
 #include "obvision/reconstruct/space/RayCast3D.h"
+#include "obvision/reconstruct/space/SensorVelodyne3D.h"
 
 using namespace obvious;
 
 #define LASERSCANNER 0
 #define KINECT 1
+#define VELODYNE3D 2
 
 void func(){};
 
@@ -28,7 +30,7 @@ int main(int argc, char* argv[])
   if(argc<2)
   {
     cout << "usage: " << argv[0] << " <sensor>" << endl;
-    cout << " sensor: 0=Laser scanner, 1=Kinect" << endl;
+    cout << " sensor: 0=Laser scanner, 1=Kinect, 2=Velodyne 3D laser scanner" << endl;
     exit(1);
   }
 
@@ -53,7 +55,7 @@ int main(int argc, char* argv[])
     subsamplingW = 64;
     subsamplingH = 48;
   }
-  else
+  else if(sensortype==LASERSCANNER)
   {
     double thetaRes = deg2rad(0.25);
     double thetaMin = deg2rad(-135.0);
@@ -61,6 +63,21 @@ int main(int argc, char* argv[])
     sensor = new SensorPolar3D(1081, thetaRes, thetaMin, planes);
     subsamplingH = 24;
     subsamplingW = 72;
+  }
+
+  else if(sensortype==VELODYNE3D)
+  {
+	  unsigned int raysIncl = 16;
+	  double inclMin = deg2rad(-15.0);
+	  double inclRes = deg2rad(2.0);
+	  double azimRes = deg2rad(0.2);
+//	      double inclMin = -15.0;
+//	      double inclRes = 2.0;
+//	      double azimRes = 0.4;
+	  //make new sensor here from my class
+	  sensor = new SensorVelodyne3D(raysIncl, inclMin, inclRes, azimRes);
+	  subsamplingH = 24;
+	  subsamplingW = 72;
   }
 
   unsigned int width = sensor->getWidth();

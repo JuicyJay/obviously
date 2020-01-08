@@ -31,10 +31,10 @@ void returnAngles(double xCoord, double yCoord, double zCoord, double* inclAngle
   double theta = 0.0;   //careful - this is the angle between z-axis and x-y-plane as defined in polar coords --> not inclination angle
 
   //das macht May mit acos
-//  double r = sqrt(coords3D(0,i) * coords3D(0,i) + coords3D(1,i) * coords3D(1,i) + coords3D(2,i) * coords3D(2,i));
-//  double theta = acos(coords3D(1,i) / r);
-//  if(coords3D(2,i)>0)
-//    theta = -theta;catkin
+  //  double r = sqrt(coords3D(0,i) * coords3D(0,i) + coords3D(1,i) * coords3D(1,i) + coords3D(2,i) * coords3D(2,i));
+  //  double theta = acos(coords3D(1,i) / r);
+  //  if(coords3D(2,i)>0)
+  //    theta = -theta;catkin
 
   double length = sqrt(xCoord*xCoord + yCoord*yCoord + zCoord*zCoord);
   double lengthInv = 1.0 / length;
@@ -43,30 +43,30 @@ void returnAngles(double xCoord, double yCoord, double zCoord, double* inclAngle
   std::cout << "theta = " << theta << std::endl;
 
 
-if((theta < 75.0) && (theta > 105.0))
-{
-  std::cout << __PRETTY_FUNCTION__ << "3D coordinates are not within field of vision of laser scanner" << std::endl;
-}
-else
-{
-  if(theta > 90.0)
+  if((theta < 75.0) && (theta > 105.0))
   {
-    *inclAngle = - (theta - 90.0);
+    std::cout << __PRETTY_FUNCTION__ << "3D coordinates are not within field of vision of laser scanner" << std::endl;
   }
   else
   {
-    *inclAngle = 90.0 - theta;
-  }
-//  std::cout << __PRETTY_FUNCTION__ << " inclAngle = " << *inclAngle << std::endl;
+    if(theta > 90.0)
+    {
+      *inclAngle = - (theta - 90.0);
+    }
+    else
+    {
+      *inclAngle = 90.0 - theta;
+    }
+    //  std::cout << __PRETTY_FUNCTION__ << " inclAngle = " << *inclAngle << std::endl;
 
-  //AZIMUTH
-  *azimAngle = obvious::rad2deg(atan2(yCoord,xCoord));
-  if(*azimAngle < 0)
-  {
-    *azimAngle += 360.0;    //express angles positively in 3rd and 4th quadrant
-  }
+    //AZIMUTH
+    *azimAngle = obvious::rad2deg(atan2(yCoord,xCoord));
+    if(*azimAngle < 0)
+    {
+      *azimAngle += 360.0;    //express angles positively in 3rd and 4th quadrant
+    }
 
-//  std::cout << __PRETTY_FUNCTION__ << " azimAngle = " << *azimAngle << std::endl;
+    //  std::cout << __PRETTY_FUNCTION__ << " azimAngle = " << *azimAngle << std::endl;
   }
 }
 
@@ -106,7 +106,7 @@ void setIndexMap(unsigned int azimuthRays, unsigned int verticalRays)
 
       _indexMap[row][column] = row*(verticalRays) + column;
 
-//      std::cout << "_indexMap = " << _indexMap[row][column] << std::endl;
+      //      std::cout << "_indexMap = " << _indexMap[row][column] << std::endl;
     }
     column=0;     //iterate over 16 vertical rays for each azimuth ray
   }
@@ -162,69 +162,74 @@ unsigned int lookupIndex(int indexSensormodel)
 }
 
 //test with selfmade matrix here, later with incoming matrix* M & transformation into sensor coordinate system
-//void backProject(obvious::Matrix* M, int* indices, obvious::Matrix* T)
-void backProject()
+void backProject(obvious::Matrix* M, int* indices, obvious::Matrix* T = 0)
 {
-  obvious::Matrix testMatrix(3, 1);
-  //add coordinates of sphere for testing
-  double z = -0.007;
-  double y = 0.01;
-  double x = 0.2;
-  testMatrix(0,0) = x;
-  testMatrix(1,0) = y;
-  testMatrix(2,0) = z;
+  std::cout << __PRETTY_FUNCTION__ << " getRows = " << M->getRows() << std::endl;
+  std::cout << __PRETTY_FUNCTION__ << " getCols = " << M->getCols() << std::endl;
 
-  //loop through all points later, for now: just one 3D point in matrix
-  double inclAngle = 0.0;
-  double azimAngle = 0.0;
-  returnAngles(x, y, z, &inclAngle, &azimAngle);
-  std::cout << __PRETTY_FUNCTION__ << " inclAngle = " << inclAngle << std::endl;
-  std::cout << __PRETTY_FUNCTION__ << " azimAngle = " << azimAngle << std::endl;
+  obvious::Matrix copyM = *M;
 
-  //1: calculate incoming azimuth = ROW index of indexMap
-  //2: calculate incoming inclination = COLUMN of indexMap
-  unsigned int row = 0;
-  unsigned int column = 0;
-  returnRayIndex(azimAngle, inclAngle, &row, &column);
-  std::cout << __PRETTY_FUNCTION__ << " row = " << row << std::endl;
-  std::cout << __PRETTY_FUNCTION__ << " column = " << column << std::endl;
-  //map column from sensor model to Velodyne firing sequence (order of vertical rays differs between sensormodel and velodyne ros input)
-  unsigned int columnMapped = lookupIndex(column);
-  std::cout << __PRETTY_FUNCTION__ << " columnMapped = " << columnMapped << std::endl;
+  //LATER GETROWS WIE BEI MAY WEGEN TRANSPOSE??
+  for(unsigned int i = 0; i < M->getCols(); i++)
+  {
+    double x = copyM(0, i);
+    double y = copyM(1, i);
+    double z = copyM(2, i);
+    std::cout << __PRETTY_FUNCTION__ << " x = " << x << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " y = " << y << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " z = " << z << std::endl;
+    double inclAngle = 0.0;
+    double azimAngle = 0.0;
+    returnAngles(x, y, z, &inclAngle, &azimAngle);
+    std::cout << __PRETTY_FUNCTION__ << " inclAngle = " << inclAngle << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " azimAngle = " << azimAngle << std::endl;
 
-  //push value into int* that is in indexMap[row][column]
-  std::cout << __PRETTY_FUNCTION__ << "_indexMap = " << _indexMap[row][columnMapped] << std::endl;
+    //1: calculate incoming azimuth = ROW index of indexMap
+    //2: calculate incoming inclination = COLUMN of indexMap
+    unsigned int row = 0;
+    unsigned int column = 0;
+    returnRayIndex(azimAngle, inclAngle, &row, &column);
+    std::cout << __PRETTY_FUNCTION__ << " row = " << row << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " column = " << column << std::endl;
+    //map column from sensor model to Velodyne firing sequence (order of vertical rays differs between sensormodel and velodyne ros input)
+    unsigned int columnMapped = lookupIndex(column);
+    std::cout << __PRETTY_FUNCTION__ << " columnMapped = " << columnMapped << std::endl;
 
-  //probe: index ausrechnen
-  unsigned int idxCheck = columnMapped + 16 * row;
-  std::cout << __PRETTY_FUNCTION__ << " idxCheck = " << idxCheck << std::endl;
+    //push value into int* that is in indexMap[row][column]
+    std::cout << __PRETTY_FUNCTION__ << "_indexMap = " << _indexMap[row][columnMapped] << std::endl;
 
+    //probe: index ausrechnen
+    unsigned int idxCheck = columnMapped + 16 * row;
+    std::cout << __PRETTY_FUNCTION__ << " idxCheck = " << idxCheck << std::endl;
 
+    indices[i] = _indexMap[row][columnMapped];
+    std::cout << "end of loop, content of vector indices = " << indices[i] << std::endl;
+  }
   //transform M into sensor coordinate system
-//  obvious::Matrix PoseInv = obvious::getTransformation();
-//  PoseInv.invert();
-//  if(T)
-//    PoseInv *= *T;
-//
-//  //multiply PoseInv with M where poseInv is not transposed but M is transposed (true)
-//  obvious::Matrix coords3D = obvious::Matrix::multiply(PoseInv, *M, false, true);
-//  obvious::Matrix coords3D;
-//
-//  //loop through all 3d points in matrix and calculate inclination angle phi, azimuth angle theta and length vector (length from 3D pt to 0)
-//  //WARUM DURCH ROWS? UND NICHT COLUMNS? WEIL TRANSPOSED WURDE? ne du idiot, i steht ja an der column stelle. hääää
-//  for(unsigned int i=0; i<M->getRows(); i++)
-//    {
-//      double phi = atan2(coords3D(2,i), coords3D(0,i)) - M_PI;
-//      if(phi>M_PI) phi -= M_PI;
-//      if(phi<-M_PI) phi += M_PI;
-//
-//      double r = sqrt(coords3D(0,i) * coords3D(0,i) + coords3D(1,i) * coords3D(1,i) + coords3D(2,i) * coords3D(2,i));
-//      double theta = acos(coords3D(1,i) / r);
-//      if(coords3D(2,i)>0)
-//        theta = -theta;
-//
-//      //nächste codeschritte aus may's code: rechnen für den swiipenden scanner, bei mir 360°
-//    }
+  //  obvious::Matrix PoseInv = obvious::getTransformation();
+  //  PoseInv.invert();
+  //  if(T)
+  //    PoseInv *= *T;
+  //
+  //  //multiply PoseInv with M where poseInv is not transposed but M is transposed (true)
+  //  obvious::Matrix coords3D = obvious::Matrix::multiply(PoseInv, *M, false, true);
+  //  obvious::Matrix coords3D;
+  //
+  //  //loop through all 3d points in matrix and calculate inclination angle phi, azimuth angle theta and length vector (length from 3D pt to 0)
+  //  //WARUM DURCH ROWS? UND NICHT COLUMNS? WEIL TRANSPOSED WURDE? ne du idiot, i steht ja an der column stelle. hääää
+  //  for(unsigned int i=0; i<M->getRows(); i++)
+  //    {
+  //      double phi = atan2(coords3D(2,i), coords3D(0,i)) - M_PI;
+  //      if(phi>M_PI) phi -= M_PI;
+  //      if(phi<-M_PI) phi += M_PI;
+  //
+  //      double r = sqrt(coords3D(0,i) * coords3D(0,i) + coords3D(1,i) * coords3D(1,i) + coords3D(2,i) * coords3D(2,i));
+  //      double theta = acos(coords3D(1,i) / r);
+  //      if(coords3D(2,i)>0)
+  //        theta = -theta;
+  //
+  //      //nächste codeschritte aus may's code: rechnen für den swiipenden scanner, bei mir 360°
+  //    }
 }
 
 
@@ -235,11 +240,11 @@ int main(void)
   double** coordsStart;
   double** coordsEnd;
 
-//  double** coordsStartColor;
-//  double** coordsEndColor;
+  //  double** coordsStartColor;
+  //  double** coordsEndColor;
 
   double rgbGreen[3] = {0.0,180.0,153.0};
-//  double rgbRed[3] = {255.0,0.0,51.0};
+  //  double rgbRed[3] = {255.0,0.0,51.0};
 
   float angleInclThetaMin = -15.0;				//smallest inclination angle - "lowest" ray
   double thetaSphere = 0.0;		//für Definition des Winkels für Kugelkoordinaten
@@ -254,30 +259,53 @@ int main(void)
   viewer->showAxes();
 
   //TEST BACKPROJECTION
-    //draw sphere
-    double centerSphere[3] = {0.2, 0.01, -0.007};
-    double radiusSphere = 0.05;
-    double z = centerSphere[2];
-    double y = centerSphere[1];
-    double x = centerSphere[0];
-    viewer->addSphere(centerSphere, radiusSphere, rgbGreen);
+  //draw sphere
+  double centerSphere[3] = {0.2, 0.01, -0.007};
+  double radiusSphere = 0.05;
+  double z = centerSphere[2];
+  double y = centerSphere[1];
+  double x = centerSphere[0];
+  viewer->addSphere(centerSphere, radiusSphere, rgbGreen);
 
-    double inclAngle = 0.0;
-    double azimAngle = 0.0;
+  double inclAngle = 0.0;
+  double azimAngle = 0.0;
 
-    returnAngles(x, y, z, &inclAngle, &azimAngle);
-    std::cout << __PRETTY_FUNCTION__ << " inclAngle = " << inclAngle << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << " azimAngle = " << azimAngle << std::endl;
+  returnAngles(x, y, z, &inclAngle, &azimAngle);
+  std::cout << __PRETTY_FUNCTION__ << " inclAngle = " << inclAngle << std::endl;
+  std::cout << __PRETTY_FUNCTION__ << " azimAngle = " << azimAngle << std::endl;
 
 
-    unsigned int azimIndex = 0;
-    unsigned int inclIndex = 0;
-    returnRayIndex(azimAngle, inclAngle, &azimIndex, &inclIndex);
+  unsigned int azimIndex = 0;
+  unsigned int inclIndex = 0;
+  returnRayIndex(azimAngle, inclAngle, &azimIndex, &inclIndex);
 
-    setIndexMap(azimuthRays, verticalRays);
+  setIndexMap(azimuthRays, verticalRays);
 
-    //test
-    backProject();
+  //test just three 3D points in matrix with method backProject
+  obvious::Matrix testMatrix(3, 4);
+
+  //p1
+  testMatrix(0,0) = 0.2;
+  testMatrix(1,0) = 0.01;
+  testMatrix(2,0) = -0.0077;
+  //p2
+  testMatrix(0,1) = 0.1;
+  testMatrix(1,1) = 0.01;
+  testMatrix(2,1) = 0;
+  //p3
+  testMatrix(0,2) = 0.15;
+  testMatrix(1,2) = 0.01;
+  testMatrix(2,2) = 0.0077;
+  //p4
+  testMatrix(0,3) = 0.175;
+  testMatrix(1,3) = 0.01;
+  testMatrix(2,3) = 0.0077;
+  obvious::Matrix* test = &testMatrix;
+  /////////////////////////////////////////// DAS HIER SPÄTER RAUS UND IN AUFRUFENDER METHODE RICHTIG DIMENSIONIEREN!!!! getrows oder so
+  int* indices = new int [4];
+  //////////////////////////////
+  backProject(test, indices);
+
 
   obvious::Matrix* _rays;
   _rays = new obvious::Matrix(3, totalRays);
@@ -304,15 +332,15 @@ int main(void)
       {
         std::cout << "angleAzimuth of current ray is " << angleAzimuth << std::endl;
         std::cout << "angleInclination of current ray is " << angleInclThetaMin << std::endl;
-      coordsEnd[j][0] = 0.5 * sin((thetaSphere*M_PI)/180) * cos((angleAzimuth*M_PI)/180);
-      coordsEnd[j][1] = 0.5 * sin((thetaSphere*M_PI)/180) * sin((angleAzimuth*M_PI)/180);
-      coordsEnd[j][2] = 0.5 * cos((thetaSphere*M_PI)/180);
+        coordsEnd[j][0] = 0.5 * sin((thetaSphere*M_PI)/180) * cos((angleAzimuth*M_PI)/180);
+        coordsEnd[j][1] = 0.5 * sin((thetaSphere*M_PI)/180) * sin((angleAzimuth*M_PI)/180);
+        coordsEnd[j][2] = 0.5 * cos((thetaSphere*M_PI)/180);
       }
       else
       {
-      coordsEnd[j][0] = 0.1 * sin((thetaSphere*M_PI)/180) * cos((angleAzimuth*M_PI)/180);
-      coordsEnd[j][1] = 0.1 * sin((thetaSphere*M_PI)/180) * sin((angleAzimuth*M_PI)/180);
-      coordsEnd[j][2] = 0.1 * cos((thetaSphere*M_PI)/180);
+        coordsEnd[j][0] = 0.1 * sin((thetaSphere*M_PI)/180) * cos((angleAzimuth*M_PI)/180);
+        coordsEnd[j][1] = 0.1 * sin((thetaSphere*M_PI)/180) * sin((angleAzimuth*M_PI)/180);
+        coordsEnd[j][2] = 0.1 * cos((thetaSphere*M_PI)/180);
       }
 
       //for length calc
