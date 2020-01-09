@@ -70,14 +70,14 @@ int main(int argc, char* argv[])
 	  unsigned int raysIncl = 16;
 	  double inclMin = deg2rad(-15.0);
 	  double inclRes = deg2rad(2.0);
-	  double azimRes = deg2rad(0.2);
+	  double azimRes = deg2rad(1.0);
 //	      double inclMin = -15.0;
 //	      double inclRes = 2.0;
 //	      double azimRes = 0.4;
 	  //make new sensor here from my class
 	  sensor = new SensorVelodyne3D(raysIncl, inclMin, inclRes, azimRes);
-	  subsamplingH = 24;
-	  subsamplingW = 72;
+//	  subsamplingH = 24;
+//	  subsamplingW = 72;
   }
 
   unsigned int width = sensor->getWidth();

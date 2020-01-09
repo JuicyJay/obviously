@@ -47,9 +47,9 @@ private:
 
   double _thetaMin;
 
-  double _thetaLowerBound;
+ // double _thetaLowerBound;
 
-  double _thetaUpperBound;
+ // double _thetaUpperBound;
 
   double** _distanceMap;
 

@@ -141,6 +141,7 @@ void SensorPolar3D::backProject(Matrix* M, int* indices, Matrix* T)
   if(T)
     PoseInv *= *T;
 
+  //multiply PoseInv with M where poseInv is not transposed but M is transposed (true)
   Matrix coords3D = Matrix::multiply(PoseInv, *M, false, true);
 
   for(unsigned int i=0; i<M->getRows(); i++)

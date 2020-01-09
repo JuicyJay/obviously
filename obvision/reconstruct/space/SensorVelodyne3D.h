@@ -74,7 +74,7 @@ private:
   double _inclRes;
   int** _indexMap;
   /////////////////////////////////////////// DAS HIER SPÄTER RAUS UND IN AUFRUFENDER METHODE RICHTIG DIMENSIONIEREN!!!! getrows oder so
-  int* _indices;
+  // int* _indices;
   //////////////////////////////
 
 

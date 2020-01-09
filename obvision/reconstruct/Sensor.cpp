@@ -125,7 +125,11 @@ unsigned int Sensor::getRealMeasurementSize()
 void Sensor::setRealMeasurementData(double* data, double scale)
 {
   if(scale==1.0)
+ { 
+   std::cout << "here" << std::endl;
     memcpy(_data, data, _size*sizeof(*data));
+    std::cout << "not" << std::endl;
+ } 
   else
   {
     for(unsigned int i=0; i<_size; i++)
