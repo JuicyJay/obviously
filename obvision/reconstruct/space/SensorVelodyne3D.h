@@ -1,9 +1,8 @@
 #ifndef OBVISION_RECONSTRUCT_SPACE_SENSORVELODYNE3D_H_
 #define OBVISION_RECONSTRUCT_SPACE_SENSORVELODYNE3D_H_
 
-#include "obvision/reconstruct/Sensor.h"
 #include "obcore/math/linalg/eigen/Matrix.h"
-
+#include "obvision/reconstruct/Sensor.h"
 
 namespace obvious
 {
@@ -23,7 +22,8 @@ public:
    * @param[in] inclRes resolution of inclination rays in rad, i.e. angle between two vertical rays
    * @param[in] azimRes resolution of azimuth rays in rad, angle between two horizontal rays in 360° plane
    */
-  SensorVelodyne3D(unsigned int raysIncl, double inclMin, double inclRes, double azimRes, double maxRange=INFINITY, double minRange=0.0, double lowReflectivityRange=INFINITY);
+  SensorVelodyne3D(unsigned int raysIncl, double inclMin, double inclRes, double azimRes, double maxRange = INFINITY, double minRange = 0.0,
+                   double lowReflectivityRange = INFINITY);
 
   /**
    * Destructor
@@ -66,18 +66,15 @@ public:
    * @param[out] indices vector of projection results (must be allocated outside)
    * @param[in] T temporary transformation matrix of coordinates
    */
-  void backProject(obvious::Matrix* M, int* indices, obvious::Matrix* T=NULL);
+  void backProject(obvious::Matrix* M, int* indices, obvious::Matrix* T = NULL);
 
 private:
-
   double _azimRes;
   double _inclRes;
-  int** _indexMap;
-  /////////////////////////////////////////// DAS HIER SPÄTER RAUS UND IN AUFRUFENDER METHODE RICHTIG DIMENSIONIEREN!!!! getrows oder so
+  int**  _indexMap;
+  /////////////////////////////////////////// DAS HIER  RAUS wird im push initialisiert
   // int* _indices;
   //////////////////////////////
-
-
 };
 
 } /* namespace obvious */
