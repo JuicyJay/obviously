@@ -18,9 +18,9 @@ public:
   /**
    * Standard constructor
    * @param[in] raysIncl number of inclination rays of scanning device (vertical)
-   * @param[in] inclMin lowest inclination angle in rad
-   * @param[in] inclRes resolution of inclination rays in rad, i.e. angle between two vertical rays
-   * @param[in] azimRes resolution of azimuth rays in rad, angle between two horizontal rays in 360° plane
+   * @param[in] inclMin lowest inclination angle in RAD
+   * @param[in] inclRes resolution of inclination rays in RAD, i.e. angle between two vertical rays
+   * @param[in] azimRes resolution of azimuth rays in RAD, angle between two horizontal rays in 360° plane
    */
   SensorVelodyne3D(unsigned int raysIncl, double inclMin, double inclRes, double azimRes, double maxRange = INFINITY, double minRange = 0.0,
                    double lowReflectivityRange = INFINITY);
@@ -35,8 +35,8 @@ public:
    * @param[in] xCoord x coordinate of a 3D point
    * @param[in] yCoord y coordinate of a 3D point
    * @param[in] zCoord z coordinate of a 3D point
-   * @param[out] inclAngle inclination angle in x-z-plane, 16 layers of rays from -15° to +15°, 2° resolution (VLP16 PUCK)
-   * @param[out] azimAngle azimuth angle in x-y-plane, 0° to 360°
+   * @param[out] inclAngle inclination angle in x-z-plane, 16 layers of rays from -15° to +15°, 2° resolution (VLP16 PUCK) in RAD
+   * @param[out] azimAngle azimuth angle in x-y-plane, 0° to 360° in RAD
    */
   void returnAngles(double xCoord, double yCoord, double zCoord, double* inclAngle, double* azimAngle);
 
@@ -46,23 +46,28 @@ public:
    * @param[in] inclAngle inclination angle calculated in returnAngles()
    * @param[out] azimIndex index of azimuth ray number which is closest to 3D point to assign laser data to 3D point
    * @param[out] inclIndex index of inclination ray number which is closest to 3D point to assign laser data to 3D point
-   * @todo make this function abstract so each velodyne sensor has to implement it since it may differ from sensor to sensor
+   * @todo remove adaptation to VLP16 PUCK - formulate generally
    */
   void returnRayIndex(double azimAngle, double inclAngle, unsigned int* azimIndex, unsigned int* inclIndex);
 
   /**
-   *
+   * sets up an index map in the form of an 2D array; iterates over all azimuth values from 0° - 360° (=ROWS) and all inclination values from -15° to +15°
+   * (=COLUMNS)
+   * @param[in] width width of sensor, same as _width inherited from Sensor; in this case all azimuth rays
+   * @param[in] height height of sensor, same as _height inherited from Sensor; in this case all inclination rays
    */
-  void setIndexMap(unsigned int raysAzim, unsigned int raysIncl);
+  void setIndexMap(unsigned int width, unsigned int height);
 
   /**
    *
+   * @todo make this function abstract in parent class so each velodyne sensor inheriting from it has to implement it since it may differ from sensor to
+   * sensor
    */
   unsigned int lookupIndex(int indexSensormodel);
 
   /**
-   * Project coordinate back to sensor index
-   * @param[in] M matrix of 3D coordinates (homogeneous)
+   * Project all coordinates (center of each voxel in tsd space) back to sensor index: which sensor ray comes closest to the coordinate?
+   * @param[in] M matrix of 3D coordinates of all voxel center points in tsd space (homogeneous)
    * @param[out] indices vector of projection results (must be allocated outside)
    * @param[in] T temporary transformation matrix of coordinates
    */

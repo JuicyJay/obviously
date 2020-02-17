@@ -18,10 +18,7 @@ SensorVelodyne3D::SensorVelodyne3D(unsigned int raysIncl, double inclMin, double
                                        // after exiting inner for-loop (=-15°
                                        // here for VLP16)
 
-  std::cout << __PRETTY_FUNCTION__ << " _azimRes = " << _azimRes << std::endl;
-
   raysAzim = round(static_cast<unsigned>(2 * M_PI / azimRes));
-  std::cout << __PRETTY_FUNCTION__ << " raysAzim = " << raysAzim << std::endl;
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /// PLEASE LET SOMEONE CHECK IF THE AZIM+1 THING IS CORRECT! DO I REALLY HAVE 361 values FOR AZIMUT? yes right?
@@ -35,32 +32,21 @@ SensorVelodyne3D::SensorVelodyne3D(unsigned int raysIncl, double inclMin, double
   _height = raysIncl;
   // Number of measurement samples, i.e. _width x _height
   _size = _width * _height;
-  std::cout << __PRETTY_FUNCTION__ << " _width = " << _width << std::endl;
-  std::cout << __PRETTY_FUNCTION__ << " _height = " << _height << std::endl;
-
-  std::cout << __PRETTY_FUNCTION__ << " _size = " << _size << std::endl;
 
   _data = new double[_size];
   _mask = new bool[_size];
   for(unsigned int i = 0; i < _size; i++)
     _mask[i]         = true;
 
-  std::cout << __PRETTY_FUNCTION__ << " raysAzim = " << raysAzim << ", raysIncl = " << raysIncl << std::endl;
-
   // evtl mit _height u _width ersetzen
   obvious::System<int>::allocate(_width, _height, _indexMap);
-  // obvious::System<int>::allocate(raysIncl, raysAzim, _indexMap);
 
-  // unsigned int azimIndex = 0;
-  // unsigned int inclIndex = 0;
   // returnRayIndex(azimAngle, inclAngle, &azimIndex, &inclIndex);
 
-  std::cout << __PRETTY_FUNCTION__ << " setting index map.... " << std::endl;
-  // setIndexMap(raysAzim, raysIncl);
   setIndexMap(_width, _height);
 
   _rays = new obvious::Matrix(3, _size);
-  // ist das die sensortransf. ohne homog. koord?
+
   obvious::Matrix R = obvious::Matrix(*_T, 0, 0, 3, 3);
 
   double inclAngle = 0.0;
@@ -72,9 +58,7 @@ SensorVelodyne3D::SensorVelodyne3D(unsigned int raysIncl, double inclMin, double
   unsigned int n = 0; // counts all rays of inner loop and outer loop to store
                       // in matrix _rays
   for(unsigned int i = 0; i < _width; i++)
-  // for(unsigned int i = 0; i < raysAzim; i++)
   {
-    // for(unsigned int j = 0; j < raysIncl; j++, n++)
     for(unsigned int j = 0; j < _height; j++, n++)
     {
       obvious::Matrix calcRay(3, 1);
@@ -137,8 +121,6 @@ void SensorVelodyne3D::returnAngles(double xCoord, double yCoord, double zCoord,
 
   theta = acos(zCoord * lengthInv);
 
-  // std::cout << "theta = " << theta << std::endl;
-
   if(theta > deg2rad(90.0)) // translate theta into inclination angle "aperture angle"
                             // from -15° to +15°
   {
@@ -168,14 +150,14 @@ void SensorVelodyne3D::returnRayIndex(double azimAngle, double inclAngle, unsign
   *inclIndex = round(mapInclination / _inclRes);
 }
 
-void SensorVelodyne3D::setIndexMap(unsigned int raysAzim, unsigned int raysIncl)
+void SensorVelodyne3D::setIndexMap(unsigned int width, unsigned int height)
 {
   unsigned int column = 0;
-  for(unsigned int row = 0; row < raysAzim; row++)
+  for(unsigned int row = 0; row < width; row++)
   {
-    for(column = 0; column < raysIncl; column++)
+    for(column = 0; column < height; column++)
     {
-      _indexMap[row][column] = row * (raysIncl) + column;
+      _indexMap[row][column] = row * (height) + column;
     }
     column = 0; // iterate over 16 vertical rays for each azimuth ray
   }
@@ -262,9 +244,6 @@ void SensorVelodyne3D::backProject(obvious::Matrix* M, int* indices, obvious::Ma
     double x = coords3D(0, i);
     double y = coords3D(1, i);
     double z = coords3D(2, i);
-    // std::cout << __PRETTY_FUNCTION__ << " x = " << x << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << " y = " << y << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << " z = " << z << std::endl;
 
     returnAngles(x, y, z, &inclAngle, &azimAngle);
 

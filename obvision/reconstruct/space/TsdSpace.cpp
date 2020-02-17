@@ -228,7 +228,7 @@ void TsdSpace::push(Sensor* sensor)
           part->getCellCoordsOffset(t);
           Matrix T = MatrixFactory::TranslationMatrix44(t[0], t[1], t[2]);
           sensor->backProject(cellCoordsHom, idx, &T);
-abort();
+
           for(unsigned int c=0; c<partSize; c++)
           {
             // Measurement index

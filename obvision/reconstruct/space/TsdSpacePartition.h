@@ -15,8 +15,8 @@ namespace obvious
 */
 struct TsdVoxel
 {
-  obfloat tsd;
-  obfloat weight;
+  obfloat       tsd;
+  obfloat       weight;
   unsigned char rgb[3];
 };
 
@@ -28,8 +28,8 @@ struct TsdVoxel
 class TsdSpacePartition : public TsdSpaceComponent
 {
   friend class TsdSpace;
-public:
 
+public:
   /**
    * Standard constructor
    * Allocates and initializes space and matrices
@@ -41,15 +41,18 @@ public:
    * @param[in] dimZ Number of cells in z-dimension
    * @param[in] cellSize Size of cell in meters
    */
-  TsdSpacePartition(const unsigned int x, const unsigned int y, const unsigned int z, const unsigned int dimX, const unsigned int dimY, const unsigned int dimZ, const obfloat cellSize);
+  TsdSpacePartition(const unsigned int x, const unsigned int y, const unsigned int z, const unsigned int dimX, const unsigned int dimY,
+                    const unsigned int dimZ, const obfloat cellSize);
 
   ~TsdSpacePartition();
+
+  obfloat& getTsd(unsigned int x, unsigned int y, unsigned int z) const { return _space[z][y][x].tsd; }
 
   static int getInitializedPartitionSize();
 
   void reset();
 
-  obfloat& operator () (unsigned int z, unsigned int y, unsigned int x) const { return _space[z][y][x].tsd; }
+  obfloat& operator()(unsigned int z, unsigned int y, unsigned int x) const { return _space[z][y][x].tsd; }
 
   void getRGB(unsigned int z, unsigned int y, unsigned int x, unsigned char rgb[3]);
 
@@ -81,7 +84,7 @@ public:
 
   unsigned int getDepth() const { return _cellsZ; }
 
-  unsigned int getSize() const { return _cellsX*_cellsY*_cellsZ; }
+  unsigned int getSize() const { return _cellsX * _cellsY * _cellsZ; }
 
   void addTsd(const unsigned int x, const unsigned int y, const unsigned int z, const obfloat sd, const obfloat maxTruncation, const unsigned char rgb[3]);
 
@@ -94,7 +97,6 @@ public:
   void load(ifstream* f);
 
 private:
-
   TsdVoxel*** _space;
 
   static obvious::Matrix* _partCoords;
@@ -119,7 +121,6 @@ private:
 
   obfloat _initWeight;
 };
-
 }
 
 #endif

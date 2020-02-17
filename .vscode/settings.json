@@ -1,0 +1,14 @@
+{   
+    "files.associations": {
+        "array": "cpp",
+        "*.tcc": "cpp",
+        "functional": "cpp",
+        "istream": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp",
+        "limits": "cpp"
+    },
+    "clang-format.executable": "/usr/bin/clang-format",
+    "C_Cpp.clang_format_style": ".clang-format",
+    "editor.formatOnSave": true
+}
