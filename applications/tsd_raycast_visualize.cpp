@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     double       azimRes  = deg2rad(0.2);
 
     // make new sensor here from my class
-    sensor = new SensorVelodyne3D(raysIncl, inclMin, inclRes, azimRes);
+    // sensor = new SensorVelodyne3D(raysIncl, inclMin, inclRes, azimRes);
     //	  subsamplingH = 24;
     //	  subsamplingW = 72;
   }
